@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify # type: ignore
-from flask_sqlalchemy import SQLAlchemy # type: ignore
-from flask_migrate import Migrate # type: ignore
-from werkzeug.security import generate_password_hash, check_password_hash # type: ignore
-from flask_cors import  CORS 
+from flask import Flask, request, jsonify  # type: ignore
+from flask_sqlalchemy import SQLAlchemy  # type: ignore
+from flask_migrate import Migrate  # type: ignore
+from werkzeug.security import generate_password_hash, check_password_hash  # type: ignore
+from flask_cors import CORS
 
 app = Flask(__name__)
 
@@ -22,9 +22,12 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.username}>"
-@app.route('/', methods=['GET'])
+
+
+@app.route("/", methods=["GET"])
 def test():
-    return jsonify({'message': 'Flask server is connected!'})
+    return jsonify({"message": "Flask server is connected!"})
+
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -52,16 +55,13 @@ def login():
     else:
         return jsonify({"message": "Invalid email or password"}), 401
 
+
 @app.route("/shark", methods=["GET"])
 def shark():
-    return ("Shark")
+    return "Shark"
 
 
-
-
-
-CORS(app, resources={r"/*":{'origins':"*"}})
-
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 if __name__ == "__main__":
