@@ -9,6 +9,7 @@ app = Flask(__name__)
 @app.route("/")
 def test():
     return ("working")
+
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
@@ -38,11 +39,11 @@ def login():
     else:
         return jsonify({"message": "Invalid email or password"}), 401
 
-@app.router("/tutor/text", methods=["POST"])
+@app.route("/tutor/text", methods=["POST"])
 def tutorText():
     pass
 
-@app.router("/tutor/image", methods=["POST"])
+@app.route("/tutor/image", methods=["POST"])
 def tutorImage():
     pass
 
