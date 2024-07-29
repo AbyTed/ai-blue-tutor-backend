@@ -6,7 +6,9 @@ from models import User, session
 
 app = Flask(__name__)
 
-
+@app.route("/")
+def test():
+    return ("working")
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
