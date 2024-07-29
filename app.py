@@ -29,7 +29,7 @@ def test():
     return jsonify({"message": "Flask server is connected!"})
 
 
-@app.route("/api/signup", methods=["POST"])
+@app.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
     username = data["username"]
