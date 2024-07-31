@@ -3,12 +3,17 @@ from flask_sqlalchemy import SQLAlchemy  # type: ignore
 from werkzeug.security import generate_password_hash, check_password_hash  # type: ignore
 from flask_cors import CORS  # type: ignore
 from models import User, session
+import requests  # type: ignore
 
 app = Flask(__name__)
 
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
 @app.route("/")
 def test():
-    return ("working")
+    return "working"
+
 
 @app.route("/signup", methods=["POST"])
 def signup():
@@ -39,16 +44,39 @@ def login():
     else:
         return jsonify({"message": "Invalid email or password"}), 401
 
+
 @app.route("/tutor/text", methods=["POST"])
-def tutorText():
-    pass
+def tutor_image():
+    try:
+        data = request.get_json()
+        
+        url = "https://ai-api-textgen.p.rapidapi.com/completions"
 
-@app.route("/tutor/image", methods=["POST"])
-def tutorImage():
-    pass
+        
+        with open('prompt.txt','r') as file:
+            tutor_init = file.read()
+        
+        payload = {
+            "init_character": tutor_init,
+            "user_name": "Kile",
+            "character_name": "tutor",
+            "text": data["data"],
+        }
+        headers = {
+            "x-rapidapi-key": "fa07435fdfmshb2efcaa08b470aap1d2830jsn5e56356904bc",
+            "x-rapidapi-host": "ai-api-textgen.p.rapidapi.com",
+            "Content-Type": "application/json",
+        }
 
+        response = requests.post(url, json=payload, headers=headers)
 
-CORS(app, resources={r"/*": {"origins": "*"}})
+        data = response.json()
+
+        return {"message": data}
+
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")  # Debugging output
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
