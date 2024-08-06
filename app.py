@@ -43,7 +43,7 @@ def login():
 
     username = data["username"]
     password = data["password"]
-
+    
     user = session.query(User).filter(User.username == username)
     user = user[0]
     if user.username and check_password_hash(user.password, password):
