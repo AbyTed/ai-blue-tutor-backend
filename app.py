@@ -4,15 +4,22 @@ from werkzeug.security import generate_password_hash, check_password_hash  # typ
 from flask_cors import CORS  # type: ignore
 from models import User, session
 import requests  # type: ignore
+from form import Form
+import assemblyai as aai
+import os
 
 app = Flask(__name__)
-
-CORS(app, resources={r"/*": {"origins": "*"}})
-
-
-@app.route("/")
-def test():
-    return "working"
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": [
+                "https://bluetutor.vercel.app",
+                "http://localhost:5173",
+            ]
+        }
+    },
+)
 
 
 @app.route("/signup", methods=["POST"])
@@ -46,21 +53,44 @@ def login():
 
 
 @app.route("/tutor/text", methods=["POST"])
-def tutor_image():
+def tutor_text():
+    form = Form(request, os)
+    transcript = " no question"
+    saved_files = form.save_files()
+    
+    text = form.get_text()
+    student_question = form.get_student_question()
+    if saved_files:
+        try:
+            
+            aai.settings.api_key = "c4628f9a912945049498bc81862a2672"
+            transcriber = aai.Transcriber()
+
+            transcript = transcriber.transcribe(saved_files['audio'])
+            if transcript.status == aai.TranscriptStatus.error:
+                print(transcript.error)
+            else:
+                print(transcript.text)
+
+        except Exception as e:
+            print("audio couldn't be turned to text", e)
+            return jsonify({"error": str(e)}), 500
+    print(transcript)
     try:
-        data = request.get_json()
-        
         url = "https://ai-api-textgen.p.rapidapi.com/completions"
 
-        
-        with open('prompt.txt','r') as file:
+        with open("prompt.txt", "r") as file:
             tutor_init = file.read()
-        
+
         payload = {
             "init_character": tutor_init,
             "user_name": "Kile",
             "character_name": "tutor",
-            "text": data["data"],
+            "text": text
+            + " student question "
+            + student_question
+            + " another question "
+            + transcript.text,
         }
         headers = {
             "x-rapidapi-key": "fa07435fdfmshb2efcaa08b470aap1d2830jsn5e56356904bc",
@@ -71,7 +101,7 @@ def tutor_image():
         response = requests.post(url, json=payload, headers=headers)
 
         data = response.json()
-
+        form.cleanup_files()
         return {"message": data}
 
     except Exception as e:
