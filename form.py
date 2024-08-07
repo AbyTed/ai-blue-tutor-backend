@@ -28,3 +28,5 @@ class Form:
         for file_path in self.saved_files.values():
             if self.os.path.exists(file_path):
                 self.os.remove(file_path)
+    def __repr__(self) -> str:
+        return f'saved_files: {self.save_files} '

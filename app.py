@@ -5,8 +5,9 @@ from flask_cors import CORS  # type: ignore
 from models import User, session
 import requests  # type: ignore
 from form import Form
-import assemblyai as aai
+import assemblyai as aai # type: ignore
 import os
+from transcript import Transcript
 
 app = Flask(__name__)
 CORS(
@@ -43,7 +44,7 @@ def login():
 
     username = data["username"]
     password = data["password"]
-    
+
     user = session.query(User).filter(User.username == username)
     user = user[0]
     if user.username and check_password_hash(user.password, password):
@@ -55,14 +56,15 @@ def login():
 @app.route("/tutor/text", methods=["POST"])
 def tutor_text():
     form = Form(request, os)
-    transcript = " no question"
+    transcript = Transcript("no question")
     saved_files = form.save_files()
     
     text = form.get_text()
     student_question = form.get_student_question()
+    
     if saved_files:
         try:
-            
+            print('f')
             aai.settings.api_key = "c4628f9a912945049498bc81862a2672"
             transcriber = aai.Transcriber()
 
