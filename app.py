@@ -86,7 +86,7 @@ def tutor_text():
 
         payload = {
             "init_character": tutor_init,
-            "user_name": "Kile",
+            "user_name": "student",
             "character_name": "tutor",
             "text": text
             + " student question "
@@ -100,8 +100,23 @@ def tutor_text():
             "Content-Type": "application/json",
         }
 
+        
         response = requests.post(url, json=payload, headers=headers)
 
+
+        payload = {
+            "init_character": tutor_init,
+            "user_name": "Kile",
+            "character_name": "tutor",
+            "text": response.json()
+
+        }
+        headers = {
+            "x-rapidapi-key": "fa07435fdfmshb2efcaa08b470aap1d2830jsn5e56356904bc",
+            "x-rapidapi-host": "ai-api-textgen.p.rapidapi.com",
+            "Content-Type": "application/json",
+        }
+        response = requests.post(url, json=payload, headers=headers)
         data = response.json()
         form.cleanup_files()
         return {"message": data}
