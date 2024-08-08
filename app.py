@@ -8,8 +8,7 @@ from form import Form
 import assemblyai as aai # type: ignore
 import os
 from transcript import Transcript
-from dotenv import load_dotenv
-load_dotenv()
+
 app = Flask(__name__)
 CORS(
     app,
@@ -66,7 +65,7 @@ def tutor_text():
     if saved_files:
         try:
             
-            aai.settings.api_key = os.getenv('API_KEY_AI')
+            aai.settings.api_key = "c4628f9a912945049498bc81862a2672"
             transcriber = aai.Transcriber()
 
             transcript = transcriber.transcribe(saved_files['audio'])
@@ -93,7 +92,7 @@ def tutor_text():
             + transcript.text,
         }
         headers = {
-            "x-rapidapi-key": os.getenv('API_KEY_AUDIO'),
+            "x-rapidapi-key": "fa07435fdfmshb2efcaa08b470aap1d2830jsn5e56356904bc",
             "x-rapidapi-host": "ai-api-textgen.p.rapidapi.com",
             "Content-Type": "application/json",
         }
