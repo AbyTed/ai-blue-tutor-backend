@@ -58,7 +58,7 @@ def tutor_text():
     form = Form(request, os)
     transcript = Transcript("no question")
     saved_files = form.save_files()
-    
+    transcript.text = ""
     text = form.get_text()
     student_question = form.get_student_question()
     
