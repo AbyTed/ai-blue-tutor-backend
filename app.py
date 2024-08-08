@@ -64,20 +64,17 @@ def tutor_text():
     
     if saved_files:
         try:
-            print('f')
+            
             aai.settings.api_key = "c4628f9a912945049498bc81862a2672"
             transcriber = aai.Transcriber()
 
             transcript = transcriber.transcribe(saved_files['audio'])
-            if transcript.status == aai.TranscriptStatus.error:
-                print(transcript.error)
-            else:
-                print(transcript.text)
+            
 
         except Exception as e:
-            print("audio couldn't be turned to text", e)
+            print("audio couldn't be transcribed", e)
             return jsonify({"error": str(e)}), 500
-    print(transcript)
+    print(transcript.text)
     try:
         url = "https://ai-api-textgen.p.rapidapi.com/completions"
 
@@ -102,29 +99,15 @@ def tutor_text():
 
         
         response = requests.post(url, json=payload, headers=headers)
-
-
-        payload = {
-            "init_character": tutor_init,
-            "user_name": "Kile",
-            "character_name": "tutor",
-            "text": response.json()
-
-        }
-        headers = {
-            "x-rapidapi-key": "fa07435fdfmshb2efcaa08b470aap1d2830jsn5e56356904bc",
-            "x-rapidapi-host": "ai-api-textgen.p.rapidapi.com",
-            "Content-Type": "application/json",
-        }
-        response = requests.post(url, json=payload, headers=headers)
         data = response.json()
-        form.cleanup_files()
+        print(data)
         return {"message": data}
 
     except Exception as e:
         print(f"Error occurred: {str(e)}")  # Debugging output
         return jsonify({"error": str(e)}), 500
-
+    finally:
+        form.cleanup_files()
 
 if __name__ == "__main__":
     app.run(debug=True)
