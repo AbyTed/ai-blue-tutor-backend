@@ -5,9 +5,17 @@ from flask_cors import CORS  # type: ignore
 from models import User, session
 import requests  # type: ignore
 from form import Form
-import assemblyai as aai # type: ignore
+import assemblyai as aai  # type: ignore
 import os
 from transcript import Transcript
+from openai import OpenAI # type: ignore
+import tempfile
+
+client = OpenAI(
+  api_key="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",
+  
+)
+
 
 app = Flask(__name__)
 CORS(
@@ -55,51 +63,40 @@ def login():
 
 @app.route("/tutor/text", methods=["POST"])
 def tutor_text():
-    form = Form(request, os)
+    form = Form(request, os, tempfile)
     transcript = Transcript("no question")
     saved_files = form.save_files()
     transcript.text = ""
     text = form.get_text()
     student_question = form.get_student_question()
-    
+
     if saved_files:
         try:
-            
+
             aai.settings.api_key = "c4628f9a912945049498bc81862a2672"
             transcriber = aai.Transcriber()
 
-            transcript = transcriber.transcribe(saved_files['audio'])
-            
+            transcript = transcriber.transcribe(saved_files["audio"])
 
         except Exception as e:
             print("audio couldn't be transcribed", e)
             return jsonify({"error": str(e)}), 500
     print(transcript.text)
     try:
-        url = "https://ai-api-textgen.p.rapidapi.com/completions"
 
         with open("prompt.txt", "r") as file:
             tutor_init = file.read()
-
-        payload = {
-            "init_character": tutor_init,
-            "user_name": "student",
-            "character_name": "tutor",
-            "text": text
-            + " student question "
-            + student_question
-            + " another question "
-            + transcript.text,
-        }
-        headers = {
-            "x-rapidapi-key": "fa07435fdfmshb2efcaa08b470aap1d2830jsn5e56356904bc",
-            "x-rapidapi-host": "ai-api-textgen.p.rapidapi.com",
-            "Content-Type": "application/json",
-        }
-
+            
         
-        response = requests.post(url, json=payload, headers=headers)
-        data = response.json()
+
+        print(text)
+        stream = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": tutor_init},
+                      {"role":"user", "content":f"{text} student question {student_question}"}],
+        )
+        data = stream.choices[0].message.content
+        
         print(data)
         return {"message": data}
 
@@ -108,6 +105,7 @@ def tutor_text():
         return jsonify({"error": str(e)}), 500
     finally:
         form.cleanup_files()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
