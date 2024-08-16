@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify  # type: ignore
+from flask import Flask, request, jsonify, send_file  # type: ignore
 from flask_sqlalchemy import SQLAlchemy  # type: ignore
 from werkzeug.security import generate_password_hash, check_password_hash  # type: ignore
 from flask_cors import CORS  # type: ignore
@@ -8,13 +8,16 @@ from form import Form
 import assemblyai as aai  # type: ignore
 import os
 from transcript import Transcript
-from openai import OpenAI # type: ignore
+from openai import OpenAI  # type: ignore
 import tempfile
+from dotenv import load_dotenv  # type: ignore
+import io
+from elevenlabs import VoiceSettings
+from elevenlabs.client import ElevenLabs
 
-client = OpenAI(
-  api_key="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",
-  
-)
+load_dotenv()
+
+client = OpenAI(api_key=os.getenv("API_KEY_OPENAI"))
 
 
 app = Flask(__name__)
@@ -25,7 +28,9 @@ CORS(
             "origins": [
                 "https://bluetutor.vercel.app",
                 "http://localhost:5173",
-            ]
+            ],
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type"],
         }
     },
 )
@@ -73,7 +78,7 @@ def tutor_text():
     if saved_files:
         try:
 
-            aai.settings.api_key = "c4628f9a912945049498bc81862a2672"
+            aai.settings.api_key = os.getenv("API_KEY_ASSEMBLY_AI")
             transcriber = aai.Transcriber()
 
             transcript = transcriber.transcribe(saved_files["audio"])
@@ -81,30 +86,77 @@ def tutor_text():
         except Exception as e:
             print("audio couldn't be transcribed", e)
             return jsonify({"error": str(e)}), 500
-    print(transcript.text)
     try:
 
         with open("prompt.txt", "r") as file:
             tutor_init = file.read()
-            
-        
 
-        print(text)
         stream = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role": "system", "content": tutor_init},
-                      {"role":"user", "content":f"{text} student question {student_question}"}],
+            messages=[
+                {"role": "system", "content": tutor_init},
+                {
+                    "role": "user",
+                    "content": f"{text} student question {student_question}; {transcript.text}",
+                },
+            ],
         )
         data = stream.choices[0].message.content
-        
-        print(data)
         return {"message": data}
-
     except Exception as e:
         print(f"Error occurred: {str(e)}")  # Debugging output
         return jsonify({"error": str(e)}), 500
-    finally:
-        form.cleanup_files()
+
+
+@app.route("/tutor/audio", methods=["POST"])
+def tutor_audio():
+    CHUNK_SIZE = 1024
+    data = request.get_json()
+    text = data['text']
+    print(f"Received text: {text}")  # Debugging output
+
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{os.getenv('ELEVEN_LABS_VOICE_ID')}"
+    headers = {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": os.getenv("API_KEY_ELEVEN_LABS"),
+    }
+
+    data = {
+        "text": text,
+        "model_id": "eleven_monolingual_v1",
+        "voice_settings": {"stability": 0.5, "similarity_boost": 0.5},
+    }
+
+    try:
+        print(f"Sending request to URL: {url}")  # Debugging output
+        response = requests.post(url, json=data, headers=headers, stream=True)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        # Check the content type to ensure it's audio
+        if "audio/mpeg" not in response.headers.get("Content-Type", ""):
+            raise ValueError("Response content is not audio/mpeg")
+
+        # Use a BytesIO buffer to hold the audio content
+        audio_content = io.BytesIO()
+
+        # Write the audio content to the buffer in chunks
+        for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
+            if chunk:
+                audio_content.write(chunk)
+
+        # Reset buffer position to the beginning
+        audio_content.seek(0)
+
+        return send_file(
+            audio_content,
+            mimetype="audio/mpeg",
+            as_attachment=True,
+            download_name="output.mp3",
+        )
+    except Exception as e:
+        print(f"Failed to convert text to speech: {str(e)}")
+        return jsonify({"error": "Failed to generate audio"}), 500
 
 
 if __name__ == "__main__":
