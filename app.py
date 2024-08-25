@@ -1,19 +1,17 @@
-from flask import Flask, request, jsonify, send_file  # type: ignore
-from flask_sqlalchemy import SQLAlchemy  # type: ignore
-from werkzeug.security import generate_password_hash, check_password_hash  # type: ignore
-from flask_cors import CORS  # type: ignore
+from flask import Flask, request, jsonify, send_file 
+from flask_sqlalchemy import SQLAlchemy  
+from werkzeug.security import generate_password_hash, check_password_hash  
+from flask_cors import CORS 
 from models import User, session
-import requests  # type: ignore
+import requests  
 from form import Form
-import assemblyai as aai  # type: ignore
+import assemblyai as aai  
 import os
 from transcript import Transcript
-from openai import OpenAI  # type: ignore
+from openai import OpenAI  
 import tempfile
-from dotenv import load_dotenv  # type: ignore
+from dotenv import load_dotenv  
 import io
-from elevenlabs import VoiceSettings
-from elevenlabs.client import ElevenLabs
 
 load_dotenv()
 
@@ -28,6 +26,7 @@ CORS(
             "origins": [
                 "https://bluetutor.vercel.app",
                 "http://localhost:5173",
+                "https://bluetutor.vercel.app/login/blueTutor",
             ],
             "methods": ["GET", "POST", "OPTIONS"],
             "allow_headers": ["Content-Type"],
