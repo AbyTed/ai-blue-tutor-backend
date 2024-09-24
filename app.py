@@ -25,7 +25,7 @@ CORS(
         r"/*": {
             "origins": [
                 "https://bluetutor.vercel.app",
-                "http://localhost:5173",
+                "http://localhost:5173/",
                 "https://bluetutor.vercel.app/login/blueTutor",
             ],
             "methods": ["GET", "POST", "OPTIONS"],
