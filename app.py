@@ -112,6 +112,7 @@ def tutor_audio():
     CHUNK_SIZE = 1024
     data = request.get_json()
     text = data['text']
+    text = text.replace('*', '')
     print(f"Received text: {text}")  # Debugging output
 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{os.getenv('ELEVEN_LABS_VOICE_ID')}"
