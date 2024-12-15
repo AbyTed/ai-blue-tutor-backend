@@ -2,16 +2,18 @@ from flask import Flask, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy  
 from werkzeug.security import generate_password_hash, check_password_hash  
 from flask_cors import CORS 
-from models import User, session
-import requests  
-from form import Form
 import assemblyai as aai  
-import os
-from transcript import Transcript
-from openai import OpenAI  
+from openai import OpenAI
+
+import requests  
 import tempfile
-from dotenv import load_dotenv  
+import os
 import io
+from dotenv import load_dotenv
+
+from transcript import Transcript
+from models import User, session
+from form import Form
 
 load_dotenv()
 
